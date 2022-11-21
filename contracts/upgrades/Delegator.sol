@@ -3,11 +3,6 @@ pragma solidity ^0.8.9;
 
 import "./Storage.sol";
 
-/**
- * @title ComptrollerCore
- * @dev Storage for the comptroller is at this address, while execution is delegated to the `comptrollerImplementation`.
- * CTokens should reference this contract as their comptroller.
- */
 contract Delegator is AdminStorage {
 
     constructor() {
