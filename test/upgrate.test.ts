@@ -1,7 +1,6 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 
-import { BigNumber } from "ethers";
 import { Delegator, ImplV1, ImplV2 } from "../typechain-types";
 
 describe("MainEntry", function () {
