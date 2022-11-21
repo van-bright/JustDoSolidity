@@ -51,6 +51,6 @@ contract Permit {
         );
 
         // Signature Verified, do your own business
-        ++nonce;
+        ++nonce; // increase nonce to invalid this signature
     }
 }
