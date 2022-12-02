@@ -21,4 +21,18 @@ interface IUniswapRouter {
         uint amountBMin,
         address to
     ) external returns (uint amountA, uint amountB);
+
+    function swapExactTokensForTokens(
+        uint amountIn,
+        uint amountOutMin,
+        address[] calldata path,
+        address to
+    ) external returns (uint[] memory amounts);
+
+    function swapTokensForExactTokens(
+        uint amountOut,
+        uint amountInMax,
+        address[] calldata path,
+        address to
+    ) external returns (uint[] memory amounts);
 }

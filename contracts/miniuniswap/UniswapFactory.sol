@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import "./IUniswapFactory.sol";
+import "./libs/IUniswapFactory.sol";
 import "./UniswapPair.sol";
 
 contract UniswapFactory is IUniswapFactory {
@@ -27,6 +27,7 @@ contract UniswapFactory is IUniswapFactory {
         getPair[token0][token1] = pair;
         getPair[token1][token0] = pair; // populate mapping in the reverse direction
         allPairs.push(pair);
+
         emit PairCreated(token0, token1, pair, allPairs.length);
     }
 }

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import "./IERC20.sol";
-import "./IUniswapPair.sol";
-import "./Math.sol";
-import "./UQ112x112.sol";
+import "./libs/IERC20.sol";
+import "./libs/IUniswapPair.sol";
+import "./libs/Math.sol";
+import "./libs/UQ112x112.sol";
 
 contract UniswapPair is IUniswapPair {
     using UQ112x112 for uint224;
@@ -129,7 +129,7 @@ contract UniswapPair is IUniswapPair {
         uint _totalSupply = totalSupply; // gas savings, must be defined here since totalSupply can update in _mintFee
         amount0 = liquidity * balance0 / _totalSupply; // using balances ensures pro-rata distribution
         amount1 = liquidity * balance1 / _totalSupply; // using balances ensures pro-rata distribution
-        require(amount0 > 0 && amount1 > 0, 'UniswapV2: INSUFFICIENT_LIQUIDITY_BURNED');
+        require(amount0 > 0 && amount1 > 0, 'UniswapPair: INSUFFICIENT_LIQUIDITY_BURNED');
 
         _burn(address(this), liquidity);
 
@@ -147,5 +147,35 @@ contract UniswapPair is IUniswapPair {
         require(msg.sender == factory, 'UniswapPair: FORBIDDEN'); // sufficient check
         token0 = _token0;
         token1 = _token1;
+    }
+
+    function swap(uint amount0Out, uint amount1Out, address to) external {
+        require(amount0Out > 0 || amount1Out > 0, 'UniswapPair: INSUFFICIENT_OUTPUT_AMOUNT');
+        (uint112 _reserve0, uint112 _reserve1,) = getReserves(); // gas savings
+        require(amount0Out < _reserve0 && amount1Out < _reserve1, 'UniswapPair: INSUFFICIENT_LIQUIDITY');
+
+        uint balance0;
+        uint balance1;
+        { // scope for _token{0,1}, avoids stack too deep errors
+        address _token0 = token0;
+        address _token1 = token1;
+        require(to != _token0 && to != _token1, 'UniswapPair: INVALID_TO');
+        if (amount0Out > 0) IERC20(_token0).transfer(to, amount0Out); // optimistically transfer tokens
+        if (amount1Out > 0) IERC20(_token1).transfer(to, amount1Out); // optimistically transfer tokens
+
+        balance0 = IERC20(_token0).balanceOf(address(this));
+        balance1 = IERC20(_token1).balanceOf(address(this));
+        }
+        uint amount0In = balance0 > _reserve0 - amount0Out ? balance0 - (_reserve0 - amount0Out) : 0;
+        uint amount1In = balance1 > _reserve1 - amount1Out ? balance1 - (_reserve1 - amount1Out) : 0;
+        require(amount0In > 0 || amount1In > 0, 'UniswapPair: INSUFFICIENT_INPUT_AMOUNT');
+        { // scope for reserve{0,1}Adjusted, avoids stack too deep errors
+        uint balance0Adjusted = balance0 * 1000 - (amount0In * 3);
+        uint balance1Adjusted = balance1 * 1000 - (amount1In * 3);
+        require(balance0Adjusted * balance1Adjusted >= uint(_reserve0) * _reserve1 * (1000**2), 'UniswapPair: K');
+        }
+
+        _update(balance0, balance1, _reserve0, _reserve1);
+        emit Swap(msg.sender, amount0In, amount1In, amount0Out, amount1Out, to);
     }
 }

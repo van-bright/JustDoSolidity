@@ -1,14 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import "./IUniswapRouter.sol";
-import "./IUniswapFactory.sol";
-import "./IUniswapPair.sol";
-import "./UniswapLibrary.sol";
-import "./IERC20.sol";
+import "./libs/IUniswapRouter.sol";
+import "./libs/IUniswapFactory.sol";
+import "./libs/IUniswapPair.sol";
+import "./libs/UniswapLibrary.sol";
+import "./libs/IERC20.sol";
 
 contract UniswapRouter is IUniswapRouter {
     address public factory;
+
+    constructor(address _factory) {
+        factory = _factory;
+    }
 
     function _addLiquidity(
         address tokenA,
@@ -71,5 +75,46 @@ contract UniswapRouter is IUniswapRouter {
         (amountA, amountB) = tokenA == token0 ? (amount0, amount1) : (amount1, amount0);
         require(amountA >= amountAMin, 'UniswapRouter: INSUFFICIENT_A_AMOUNT');
         require(amountB >= amountBMin, 'UniswapRouter: INSUFFICIENT_B_AMOUNT');
+    }
+
+    function _swap(uint[] memory amounts, address[] memory path, address _to) internal virtual {
+        for (uint i; i < path.length - 1; i++) {
+            (address input, address output) = (path[i], path[i + 1]);
+            (address token0,) = UniswapLibrary.sortTokens(input, output);
+            uint amountOut = amounts[i + 1];
+            (uint amount0Out, uint amount1Out) = input == token0 ? (uint(0), amountOut) : (amountOut, uint(0));
+            address to = i < path.length - 2 ? UniswapLibrary.pairFor(factory, output, path[i + 2]) : _to;
+            IUniswapPair(UniswapLibrary.pairFor(factory, input, output)).swap(
+                amount0Out, amount1Out, to
+            );
+        }
+    }
+
+    function swapExactTokensForTokens(
+        uint amountIn,
+        uint amountOutMin,
+        address[] calldata path,
+        address to
+    ) external virtual override returns (uint[] memory amounts) {
+        amounts = UniswapLibrary.getAmountsOut(factory, amountIn, path);
+        require(amounts[amounts.length - 1] >= amountOutMin, 'UniswapV2Router: INSUFFICIENT_OUTPUT_AMOUNT');
+        IERC20(path[0]).transferFrom(
+            msg.sender, UniswapLibrary.pairFor(factory, path[0], path[1]), amounts[0]
+        );
+        _swap(amounts, path, to);
+    }
+
+    function swapTokensForExactTokens(
+        uint amountOut,
+        uint amountInMax,
+        address[] calldata path,
+        address to
+    ) external virtual override returns (uint[] memory amounts) {
+        amounts = UniswapLibrary.getAmountsIn(factory, amountOut, path);
+        require(amounts[0] <= amountInMax, 'UniswapV2Router: EXCESSIVE_INPUT_AMOUNT');
+        IERC20(path[0]).transferFrom(
+            msg.sender, UniswapLibrary.pairFor(factory, path[0], path[1]), amounts[0]
+        );
+        _swap(amounts, path, to);
     }
 }
