@@ -30,5 +30,6 @@ describe("BlackableCoin", function () {
 
         await expect(bc.connect(player1).transfer(player3.address, ethers.utils.parseEther("20"))).to.revertedWith("from blacked");
         await expect(bc.connect(player3).transfer(player2.address, ethers.utils.parseEther("20"))).to.revertedWith("to blacked");
+        // await bc.connect(player3).transfer(player2.address, ethers.utils.parseEther("20"));
     });
 });

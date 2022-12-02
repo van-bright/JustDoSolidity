@@ -3,10 +3,10 @@ import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 import { BigNumber } from "ethers";
-import { Employee} from "../typechain-types";
+import { ComplexDataType} from "../typechain-types";
 
 describe("Employee", function () {
-    let employee: Employee;
+    let employee: ComplexDataType;
     let owner: SignerWithAddress;
     let employer1: SignerWithAddress;
     let employer2: SignerWithAddress;
@@ -14,7 +14,7 @@ describe("Employee", function () {
     before(async () => {
         [owner, employer1, employer2] = await ethers.getSigners();
 
-        const C = await ethers.getContractFactory("Employee");
+        const C = await ethers.getContractFactory("ComplexDataType");
         employee = await C.connect(owner).deploy();
         await employee.deployed();
     });

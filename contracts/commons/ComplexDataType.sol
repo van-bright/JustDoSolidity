@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-contract Employee {
+contract ComplexDataType {
 
     enum EmployType { FORMAL, INFORMAL }
 
@@ -28,6 +28,7 @@ contract Employee {
     // define a modifier
     modifier onlyOwner() {
         require(msg.sender == owner, "only owner");
+
         _;
     }
 
@@ -39,11 +40,14 @@ contract Employee {
         // to receive ETH
     }
 
+    fallback() external {}
+
     function isWalletValid(address _wallet) public pure returns(bool) {
         return _wallet != address(0);
     }
 
     function addEmployor(Employor memory employer) external onlyOwner {
+        require(msg.sender == owner, "only owner");
         uint idx = posIndexes[employer.wallet];
         require(idx == 0, "wallet exist");
 
@@ -54,10 +58,10 @@ contract Employee {
         emit EmployerAdded(employer.wallet, employer.department, employer.start, employer.end);
     }
 
-    function pay(address payable wallet) external onlyOwner {
+    function pay(address wallet) external onlyOwner {
         require(!payRecords[wallet], "paied already");
 
-        wallet.transfer(0.1 ether);
+        payable(wallet).transfer(0.1 ether);
 
         payRecords[wallet] = true;
     }
