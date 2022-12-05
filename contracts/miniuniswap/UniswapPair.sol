@@ -104,6 +104,7 @@ contract UniswapPair is IUniswapPair {
         uint amount1 = balance1 - _reserve1;
 
         uint _totalSupply = totalSupply; // gas savings, must be defined here since totalSupply can update in _mintFee
+
         if (_totalSupply == 0) {
             liquidity = Math.sqrt(amount0 * amount1) - MINIMUM_LIQUIDITY;
            _mint(address(0), MINIMUM_LIQUIDITY);
@@ -111,6 +112,7 @@ contract UniswapPair is IUniswapPair {
             liquidity = Math.min(amount0 * _totalSupply / _reserve0, amount1 * _totalSupply / _reserve1);
         }
         require(liquidity > 0, 'UniswapPair: INSUFFICIENT_LIQUIDITY_MINTED');
+
         _mint(to, liquidity);
 
         _update(balance0, balance1, _reserve0, _reserve1);
